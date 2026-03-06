@@ -1,7 +1,7 @@
 import React from 'react';
-import { useRouteMatch } from 'react-router-dom';
+import { NavLink, useRouteMatch } from 'react-router-dom';
 
-import { MenuItem } from '@material-ui/core';
+import { Divider, MenuItem } from '@material-ui/core';
 
 import BookmarkForm from 'components/BookmarkForm/BookmarkForm';
 import AppBar from 'components/AppBar/AppBar';
@@ -13,7 +13,11 @@ import ConfirmModal from 'components/ConfirmModal/ConfirmModal';
 
 import { DOCUMENTATIONS } from 'config/references';
 
+import bookmarkAppModel from 'services/models/bookmarks/bookmarksAppModel';
+
 import { IMetricsBarProps } from 'types/pages/metrics/components/MetricsBar/MetricsBar';
+
+import { useModel } from 'hooks';
 
 import './MetricsBar.scss';
 
@@ -30,6 +34,22 @@ function MetricsBar({
   const [popover, setPopover] = React.useState<string>('');
 
   const route = useRouteMatch<any>();
+  const bookmarksState = useModel(bookmarkAppModel, false);
+
+  React.useEffect(() => {
+    bookmarkAppModel.initialize();
+    return () => {
+      bookmarkAppModel.destroy();
+    };
+  }, []);
+
+  const metricsBookmarks = React.useMemo(
+    () =>
+      (bookmarksState?.listData ?? []).filter(
+        (bm: any) => bm.type === 'metrics',
+      ),
+    [bookmarksState?.listData],
+  );
 
   function handleBookmarkClick(value: string): void {
     setPopover(value);
@@ -51,50 +71,59 @@ function MetricsBar({
           {...liveUpdateConfig}
           onLiveUpdateConfigChange={onLiveUpdateConfigChange}
         />
-        {route.params.appId ? (
-          <ErrorBoundary>
-            <ControlPopover
-              title='Bookmark'
-              anchor={({ onAnchorClick }) => (
-                <Button color='secondary' size='small' onClick={onAnchorClick}>
-                  <Text size={14} className='MetricsBar__item__bookmark__Text'>
-                    Bookmark
-                  </Text>
-                  <Icon
-                    name='bookmarks'
-                    className='MetricsBar__item__bookmark__Icon'
-                  />
-                </Button>
-              )}
-              component={
-                <div className='MetricsBar__popover'>
-                  <MenuItem onClick={() => handleBookmarkClick('create')}>
-                    Create Bookmark
-                  </MenuItem>
+        <ErrorBoundary>
+          <ControlPopover
+            title='Bookmarks'
+            anchor={({ onAnchorClick }) => (
+              <Button
+                color='secondary'
+                className='MetricsBar__item__bookmark'
+                size='small'
+                onClick={onAnchorClick}
+              >
+                <Text size={14} className='MetricsBar__item__bookmark__Text'>
+                  Bookmarks
+                </Text>
+                <Icon
+                  fontSize={14}
+                  name='bookmarks'
+                  className='MetricsBar__item__bookmark__Icon'
+                />
+              </Button>
+            )}
+            component={
+              <div className='MetricsBar__popover MetricsBar__bookmarks__popover'>
+                <MenuItem onClick={() => handleBookmarkClick('create')}>
+                  Create Bookmark
+                </MenuItem>
+                {route.params.appId && (
                   <MenuItem onClick={() => handleBookmarkClick('update')}>
                     Update Bookmark
                   </MenuItem>
-                </div>
-              }
-            />
-          </ErrorBoundary>
-        ) : (
-          <Button
-            color='secondary'
-            className='MetricsBar__item__bookmark'
-            size='small'
-            onClick={() => handleBookmarkClick('create')}
-          >
-            <Text size={14} className='MetricsBar__item__bookmark__Text'>
-              Bookmark
-            </Text>
-            <Icon
-              fontSize={14}
-              name='bookmarks'
-              className='MetricsBar__item__bookmark__Icon'
-            />
-          </Button>
-        )}
+                )}
+                {metricsBookmarks.length > 0 && (
+                  <>
+                    <Divider />
+                    <div className='MetricsBar__bookmarks__list'>
+                      {metricsBookmarks.map((bm: any) => (
+                        <NavLink
+                          key={bm.id}
+                          to={`/metrics/${bm.app_id}`}
+                          className='MetricsBar__bookmarks__item'
+                        >
+                          <Icon name='bookmarks' fontSize={12} />
+                          <Text size={13} tint={100}>
+                            {bm.name}
+                          </Text>
+                        </NavLink>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            }
+          />
+        </ErrorBoundary>
         <div className='MetricsBar__menu'>
           <ErrorBoundary>
             <ControlPopover

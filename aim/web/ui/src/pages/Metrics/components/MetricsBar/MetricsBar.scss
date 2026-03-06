@@ -32,4 +32,25 @@
       color: inherit;
     }
   }
+  &__bookmarks__popover {
+    min-width: 16rem;
+    max-width: 22rem;
+  }
+  &__bookmarks__list {
+    max-height: 16rem;
+    overflow-y: auto;
+    padding: $space-xxxs 0;
+  }
+  &__bookmarks__item {
+    display: flex;
+    align-items: center;
+    gap: $space-xxs;
+    padding: $space-xxs $space-xs;
+    text-decoration: none !important;
+    color: inherit !important;
+    border-radius: $border-radius-sm;
+    &:hover {
+      background-color: $cuddle-20;
+    }
+  }
 }
